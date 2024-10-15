@@ -1,19 +1,17 @@
-
-import path from 'path';
 import sharp from 'sharp';
+import path from 'path';
 
-export const resizeImage = async (filename: string, width: number, height: number): Promise<string> => {
-  const inputPath = path.join(__dirname, '../../images', 'images', filename); 
-  const outputPath = path.join(__dirname, '../../', 'images', `resized-${filename}-${width}x${height}.jpg`);
+export const resizeImage = async (inputPath: string, width: number, height: number): Promise<string> => {
+  const outputPath = path.join('processed', `resized_${width}x${height}_${path.basename(inputPath)}`);
 
   try {
     await sharp(inputPath)
       .resize(width, height)
       .toFile(outputPath);
-
+    
     return outputPath;
   } catch (error) {
-    console.error('Error resizing image:', error);
-    throw error;
+    console.error('Error processing image:', error);
+    throw new Error('Failed to resize the image');
   }
 };
