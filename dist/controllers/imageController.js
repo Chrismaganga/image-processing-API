@@ -9,8 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getImage = void 0;
+exports.deleteImage = exports.updateImage = exports.createImage = exports.getImage = void 0;
 const imageProcessor_1 = require("../utils/imageProcessor"); // Ensure this path is correct
+// Get image
 const getImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { filename, width, height } = req.query;
     // Validate query parameters
@@ -30,3 +31,26 @@ const getImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getImage = getImage;
+// Create a new image (placeholder for implementation)
+const createImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // Implementation for creating an image
+    // You may want to handle file uploads and save them appropriately
+    res.status(201).send('Image created successfully');
+});
+exports.createImage = createImage;
+// Update an existing image (placeholder for implementation)
+const updateImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    // Implementation to update image data based on the ID
+    // For example, you could update metadata or replace the image
+    res.status(200).send(`Image ${id} updated successfully`);
+});
+exports.updateImage = updateImage;
+// Delete an image (placeholder for implementation)
+const deleteImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    // Implementation to delete image based on the ID
+    // Make sure to handle the actual deletion logic
+    res.status(200).send(`Image ${id} deleted successfully`);
+});
+exports.deleteImage = deleteImage;

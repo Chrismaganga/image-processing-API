@@ -1,37 +1,85 @@
 // controllers/imageController.ts
 import { Request, Response } from 'express';
-import { resizeImage } from '../utils/imageProcessor'; // Ensure this path is correct
+import { resizeImage } from '../utils/imageProcessor';
+import path from 'path';
+import { standardSizes, SizeOption } from '../models/imageModel';
 
 // Define the types for the query parameters
 interface ImageQuery {
   filename?: string;
-  width?: string;
-  height?: string;
+  size?: string;
+  custom?: string; // Optional custom dimensions in format "widthxheight"
 }
 
-// Get image
+// Get image with standard size
 export const getImage = async (req: Request<{}, {}, {}, ImageQuery>, res: Response): Promise<void> => {
-  const { filename, width, height } = req.query;
+  const { filename, size, custom } = req.query;
 
-  // Validate query parameters
-  if (!filename || !width || !height) {
-    res.status(400).send('Missing query parameters');
+  if (!filename) {
+    res.status(400).json({ error: 'Missing filename parameter' });
     return;
   }
 
   try {
-    // Ensure that the query params are converted to appropriate types
-    const processedImage = await resizeImage(
-      filename as string,
-      parseInt(width as string),
-      parseInt(height as string)
-    );
-    // Send the processed image
-    res.status(200).sendFile(processedImage);
+    let width: number;
+    let height: number;
+
+    if (custom) {
+      // Parse custom dimensions (format: "widthxheight")
+      const [customWidth, customHeight] = custom.split('x').map(Number);
+      if (isNaN(customWidth) || isNaN(customHeight) || customWidth <= 0 || customHeight <= 0) {
+        res.status(400).json({ error: 'Invalid custom dimensions. Format should be "widthxheight" (e.g., 800x600)' });
+        return;
+      }
+      width = customWidth;
+      height = customHeight;
+    } else if (size) {
+      // Use standard size
+      const sizeOption = size.toLowerCase() as SizeOption;
+      if (!standardSizes[sizeOption]) {
+        res.status(400).json({ 
+          error: 'Invalid size option',
+          validSizes: Object.keys(standardSizes)
+        });
+        return;
+      }
+      width = standardSizes[sizeOption].width;
+      height = standardSizes[sizeOption].height;
+    } else {
+      res.status(400).json({ 
+        error: 'Missing size parameter',
+        message: 'Use either "size" with standard options (thumbnail, small, medium, large) or "custom" with dimensions (e.g., custom=800x600)'
+      });
+      return;
+    }
+
+    const processedImage = await resizeImage(filename, width, height);
+    res.sendFile(path.resolve(processedImage));
   } catch (error) {
-    console.error('Error processing image:', error); // Log the error for debugging
-    res.status(500).send('Error processing image');
+    if (error instanceof Error) {
+      if (error.message.includes('Input file not found')) {
+        res.status(404).json({ 
+          error: `Image '${filename}' not found in uploads directory`,
+          message: 'Please place the image in the uploads folder first'
+        });
+        return;
+      }
+      res.status(500).json({ error: 'Error processing image', details: error.message });
+      return;
+    }
+    res.status(500).json({ error: 'An unexpected error occurred' });
   }
+};
+
+// Get available image sizes
+export const getAvailableSizes = (req: Request, res: Response): void => {
+  res.json({
+    standardSizes,
+    usage: {
+      standardSize: '/images?filename=example.jpg&size=small',
+      customSize: '/images?filename=example.jpg&custom=800x600'
+    }
+  });
 };
 
 // Create a new image (placeholder for implementation)

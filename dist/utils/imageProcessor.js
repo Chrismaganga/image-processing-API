@@ -13,11 +13,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resizeImage = void 0;
-const path_1 = __importDefault(require("path"));
 const sharp_1 = __importDefault(require("sharp"));
-const resizeImage = (filename, width, height) => __awaiter(void 0, void 0, void 0, function* () {
-    const inputPath = path_1.default.join(__dirname, '..', 'images', filename);
-    const outputPath = path_1.default.join(__dirname, '..', 'images', `resized-${filename}-${width}x${height}.jpg`);
+const path_1 = __importDefault(require("path"));
+const resizeImage = (inputPath, width, height) => __awaiter(void 0, void 0, void 0, function* () {
+    const outputPath = path_1.default.join('processed', `resized_${width}x${height}_${path_1.default.basename(inputPath)}`);
     try {
         yield (0, sharp_1.default)(inputPath)
             .resize(width, height)
@@ -25,8 +24,8 @@ const resizeImage = (filename, width, height) => __awaiter(void 0, void 0, void 
         return outputPath;
     }
     catch (error) {
-        console.error('Error resizing image:', error);
-        throw error;
+        console.error('Error processing image:', error);
+        throw new Error('Failed to resize the image');
     }
 });
 exports.resizeImage = resizeImage;

@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "node express typscript",
   "main": "index.js",
-  "types": "module",
   "scripts": {
     "build": "npx tsc",
     "start": "nodemon dist/index.js",
