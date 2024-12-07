@@ -1,17 +1,26 @@
 import express from 'express';
-import { getImage, getAvailableSizes, createImage, updateImage, deleteImage } from '../controllers/imageController';
+import { 
+  listImages,
+  getImage, 
+  createImage, 
+  deleteImage,
+  resizeImageHandler,
+  getAvailableSizes,
+  upload
+} from '../controllers/imageController';
 
 const router = express.Router();
 
-// Get available image sizes
+// Get available sizes
 router.get('/sizes', getAvailableSizes);
 
-// Process image with standard or custom size
-router.get('/', getImage);
+// Resize image
+router.get('/resize', resizeImageHandler);
 
-// Additional routes for future implementation
-router.post('/', createImage);
-router.put('/:id', updateImage);
+// CRUD operations
+router.get('/', listImages);
+router.get('/:id', getImage);
+router.post('/', upload.single('image'), createImage);
 router.delete('/:id', deleteImage);
 
 export default router;

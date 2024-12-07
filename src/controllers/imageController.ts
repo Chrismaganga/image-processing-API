@@ -2,17 +2,114 @@
 import { Request, Response } from 'express';
 import { resizeImage } from '../utils/imageProcessor';
 import path from 'path';
+import fs from 'fs';
 import { standardSizes, SizeOption } from '../models/imageModel';
+import multer from 'multer';
 
-// Define the types for the query parameters
-interface ImageQuery {
-  filename?: string;
-  size?: string;
-  custom?: string; // Optional custom dimensions in format "widthxheight"
-}
+// Configure multer for image upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.resolve('uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
 
-// Get image with standard size
-export const getImage = async (req: Request<{}, {}, {}, ImageQuery>, res: Response): Promise<void> => {
+export const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+      return cb(new Error('Only image files are allowed!'));
+    }
+    cb(null, true);
+  }
+});
+
+// List all images
+export const listImages = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const uploadsDir = path.resolve('uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const files = fs.readdirSync(uploadsDir);
+    const images = files.filter(file => 
+      /\.(jpg|jpeg|png|gif)$/i.test(file)
+    ).map(file => ({
+      filename: file,
+      url: `/images/${file}`,
+      uploadDate: fs.statSync(path.join(uploadsDir, file)).mtime
+    }));
+
+    res.json(images);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to list images' });
+  }
+};
+
+// Get a single image
+export const getImage = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const filename = req.params.id;
+    const imagePath = path.join(path.resolve('uploads'), filename);
+
+    if (!fs.existsSync(imagePath)) {
+      res.status(404).json({ error: 'Image not found' });
+      return;
+    }
+
+    res.sendFile(imagePath);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to retrieve image' });
+  }
+};
+
+// Upload a new image
+export const createImage = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No image file uploaded' });
+      return;
+    }
+
+    res.status(201).json({
+      message: 'Image uploaded successfully',
+      filename: req.file.filename,
+      url: `/images/${req.file.filename}`
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to upload image' });
+  }
+};
+
+// Delete an image
+export const deleteImage = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const filename = req.params.id;
+    const imagePath = path.join(path.resolve('uploads'), filename);
+
+    if (!fs.existsSync(imagePath)) {
+      res.status(404).json({ error: 'Image not found' });
+      return;
+    }
+
+    fs.unlinkSync(imagePath);
+    res.json({ message: 'Image deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete image' });
+  }
+};
+
+// Resize image
+export const resizeImageHandler = async (req: Request, res: Response): Promise<void> => {
   const { filename, size, custom } = req.query;
 
   if (!filename) {
@@ -25,8 +122,7 @@ export const getImage = async (req: Request<{}, {}, {}, ImageQuery>, res: Respon
     let height: number;
 
     if (custom) {
-      // Parse custom dimensions (format: "widthxheight")
-      const [customWidth, customHeight] = custom.split('x').map(Number);
+      const [customWidth, customHeight] = (custom as string).split('x').map(Number);
       if (isNaN(customWidth) || isNaN(customHeight) || customWidth <= 0 || customHeight <= 0) {
         res.status(400).json({ error: 'Invalid custom dimensions. Format should be "widthxheight" (e.g., 800x600)' });
         return;
@@ -34,8 +130,7 @@ export const getImage = async (req: Request<{}, {}, {}, ImageQuery>, res: Respon
       width = customWidth;
       height = customHeight;
     } else if (size) {
-      // Use standard size
-      const sizeOption = size.toLowerCase() as SizeOption;
+      const sizeOption = (size as string).toLowerCase() as SizeOption;
       if (!standardSizes[sizeOption]) {
         res.status(400).json({ 
           error: 'Invalid size option',
@@ -53,14 +148,14 @@ export const getImage = async (req: Request<{}, {}, {}, ImageQuery>, res: Respon
       return;
     }
 
-    const processedImage = await resizeImage(filename, width, height);
+    const processedImage = await resizeImage(filename as string, width, height);
     res.sendFile(path.resolve(processedImage));
   } catch (error) {
     if (error instanceof Error) {
       if (error.message.includes('Input file not found')) {
         res.status(404).json({ 
           error: `Image '${filename}' not found in uploads directory`,
-          message: 'Please place the image in the uploads folder first'
+          message: 'Please upload the image first'
         });
         return;
       }
@@ -71,36 +166,12 @@ export const getImage = async (req: Request<{}, {}, {}, ImageQuery>, res: Respon
   }
 };
 
-// Get available image sizes
 export const getAvailableSizes = (req: Request, res: Response): void => {
   res.json({
     standardSizes,
     usage: {
-      standardSize: '/images?filename=example.jpg&size=small',
-      customSize: '/images?filename=example.jpg&custom=800x600'
+      standardSize: '/images/resize?filename=example.jpg&size=small',
+      customSize: '/images/resize?filename=example.jpg&custom=800x600'
     }
   });
-};
-
-// Create a new image (placeholder for implementation)
-export const createImage = async (req: Request, res: Response): Promise<void> => {
-  // Implementation for creating an image
-  // You may want to handle file uploads and save them appropriately
-  res.status(201).send('Image created successfully');
-};
-
-// Update an existing image (placeholder for implementation)
-export const updateImage = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
-  // Implementation to update image data based on the ID
-  // For example, you could update metadata or replace the image
-  res.status(200).send(`Image ${id} updated successfully`);
-};
-
-// Delete an image (placeholder for implementation)
-export const deleteImage = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
-  // Implementation to delete image based on the ID
-  // Make sure to handle the actual deletion logic
-  res.status(200).send(`Image ${id} deleted successfully`);
 };

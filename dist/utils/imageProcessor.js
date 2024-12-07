@@ -15,8 +15,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.resizeImage = void 0;
 const sharp_1 = __importDefault(require("sharp"));
 const path_1 = __importDefault(require("path"));
-const resizeImage = (inputPath, width, height) => __awaiter(void 0, void 0, void 0, function* () {
-    const outputPath = path_1.default.join('processed', `resized_${width}x${height}_${path_1.default.basename(inputPath)}`);
+const fs_1 = __importDefault(require("fs"));
+const resizeImage = (filename, width, height) => __awaiter(void 0, void 0, void 0, function* () {
+    // Create absolute paths for input and output
+    const uploadsDir = path_1.default.resolve('uploads');
+    const processedDir = path_1.default.resolve('processed');
+    // Ensure directories exist
+    if (!fs_1.default.existsSync(uploadsDir)) {
+        fs_1.default.mkdirSync(uploadsDir, { recursive: true });
+    }
+    if (!fs_1.default.existsSync(processedDir)) {
+        fs_1.default.mkdirSync(processedDir, { recursive: true });
+    }
+    const inputPath = path_1.default.join(uploadsDir, filename);
+    const outputPath = path_1.default.join(processedDir, `resized_${width}x${height}_${filename}`);
+    // Check if input file exists
+    if (!fs_1.default.existsSync(inputPath)) {
+        throw new Error(`Input file not found: ${filename}`);
+    }
     try {
         yield (0, sharp_1.default)(inputPath)
             .resize(width, height)
