@@ -1,0 +1,6 @@
+{
+    "spec_dir": "src/tests",
+    "spec_files": ["**/*.ts"],
+    "helpers": ["../node_modules/ts-node/register"]
+  }
+  
