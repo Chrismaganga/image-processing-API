@@ -8,14 +8,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resizeImage = void 0;
+exports.serveStaticFiles = exports.validateImage = exports.resizeImage = void 0;
 const imageProccessor_1 = require("../utils/imageProccessor");
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
+const models_1 = require("../models");
 const resizeImage = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { filename, width, height } = req.query;
-        if (!filename || !width || !height) {
-            res.status(400).send('Missing required query parameters: filename, width, or height.');
+        if (!filename || !width || !height || isNaN(parseInt(width)) || isNaN(parseInt(height))) {
+            res.status(400).send('Missing or invalid query parameters: filename, width, or height.');
             return;
         }
         const processedImage = yield (0, imageProccessor_1.processImage)(filename, parseInt(width), parseInt(height));
@@ -27,3 +33,43 @@ const resizeImage = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.resizeImage = resizeImage;
+const validateImage = (req, res, next) => {
+    const { filename } = req.query;
+    if (!filename) {
+        res.status(400).send('Filename is required.');
+        return;
+    }
+    const fileExtension = path_1.default.extname(filename).toLowerCase().substring(1);
+    if (!models_1.SUPPORTED_FORMATS.includes(fileExtension)) {
+        res.status(400).send('Unsupported file format.');
+        return;
+    }
+    const filePath = path_1.default.join(models_1.fullImagesPath, filename);
+    if (!fs_1.default.existsSync(filePath)) {
+        res.status(404).send('File not found.');
+        return;
+    }
+    next();
+};
+exports.validateImage = validateImage;
+const serveStaticFiles = (req, res, next) => {
+    const { filename } = req.query;
+    if (!filename) {
+        res.status(400).send('Filename is required.');
+        return;
+    }
+    const filePath = path_1.default.join(models_1.fullImagesPath, filename);
+    if (!fs_1.default.existsSync(filePath)) {
+        res.status(404).send('File not found.');
+        return;
+    }
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            next(err);
+        }
+        else {
+            next();
+        }
+    });
+};
+exports.serveStaticFiles = serveStaticFiles;

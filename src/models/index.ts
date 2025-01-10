@@ -1,17 +1,39 @@
+
 import path from 'path';
 
-// Paths to assets directories
-export const fullImagesPath = path.join(__dirname, '../../assets/full');
-export const thumbImagesPath = path.join(__dirname, '../../assets/thumb');
+export const SUPPORTED_FORMATS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'];
 
-// Add more shared constants or reusable configurations here as needed
-export const SUPPORTED_FORMATS = ['jpg', 'jpeg']; // Supported image formats
+export const fullImagesPath = path.join(__dirname, '../../assets/images/fjord');
+export const thumbImagesPath = path.join(__dirname, '../../assets/images/thumb');
 
-// Example: Centralized file model (optional if you add database models later)
-export interface FileModel {
-  filename: string;
-  width?: number;
-  height?: number;
-  path: string;
+export interface ImageProcessingOptions {
+    width?: number;
+    height?: number;
+    format?: string;
+    quality?: number;
+    blur?: number;
+    sharpen?: boolean;
+    grayscale?: boolean;
+    rotate?: number;
+    flip?: boolean;
+    flop?: boolean;
+    tint?: string;
 }
 
+export interface ImageMetadata {
+    filename: string;
+    format: string;
+    width: number;
+    height: number;
+    size: number;
+    created: Date;
+    lastModified: Date;
+    processingOptions?: ImageProcessingOptions;
+}
+
+export interface LogEntry {
+    timestamp: string;
+    action: 'process' | 'access' | 'upload' | 'error';
+    filename: string;
+    details: any;
+}
