@@ -1,9 +1,8 @@
-
 import path from 'path';
 
 export const SUPPORTED_FORMATS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'];
 
-export const fullImagesPath = path.join(__dirname, '../../assets/images/fjord');
+export const fullImagesPath = path.join(__dirname, '../../assets/images/full');
 export const thumbImagesPath = path.join(__dirname, '../../assets/images/thumb');
 
 export interface ImageProcessingOptions {
@@ -28,6 +27,7 @@ export interface ImageMetadata {
     size: number;
     created: Date;
     lastModified: Date;
+    originalPath?: string;
     processingOptions?: ImageProcessingOptions;
 }
 

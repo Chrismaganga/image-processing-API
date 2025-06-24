@@ -1,0 +1,56 @@
+{
+  "sampleImages": [
+    "sample1.jpg",
+    "sample2.jpg", 
+    "sample3.jpg",
+    "sample4.jpg",
+    "sample5.jpg",
+    "test.png",
+    "demo.webp"
+  ],
+  "testRequests": {
+    "resize": [
+      "GET /api/images/resize?filename=sample1.jpg&width=300&height=200",
+      "GET /api/images/resize?filename=sample2.jpg&width=500&height=400",
+      "GET /api/images/resize?filename=test.png&width=200&height=150"
+    ],
+    "validate": [
+      "GET /api/images/validate?filename=sample1.jpg",
+      "GET /api/images/validate?filename=test.png",
+      "GET /api/images/validate?filename=demo.webp"
+    ],
+    "static": [
+      "GET /api/images/static?filename=sample1.jpg",
+      "GET /api/images/static?filename=sample2.jpg",
+      "GET /api/images/static?filename=test.png"
+    ]
+  },
+  "curlExamples": {
+    "resize": "curl 'http://localhost:3000/api/images/resize?filename=sample1.jpg&width=300&height=200'",
+    "validate": "curl 'http://localhost:3000/api/images/validate?filename=sample1.jpg'",
+    "static": "curl 'http://localhost:3000/api/images/static?filename=sample1.jpg' -o downloaded_image.jpg"
+  },
+  "expectedResponses": {
+    "success": {
+      "status": "success",
+      "timestamp": "2024-01-01T00:00:00.000Z",
+      "image": {
+        "filename": "sample1.jpg",
+        "dimensions": {
+          "width": 300,
+          "height": 200
+        }
+      }
+    },
+    "error": {
+      "status": "error",
+      "timestamp": "2024-01-01T00:00:00.000Z",
+      "error": "Missing parameters",
+      "required": {
+        "filename": "string",
+        "width": "number",
+        "height": "number"
+      }
+    }
+  }
+} 

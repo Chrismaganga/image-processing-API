@@ -12,6 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const imageProccessor_1 = require("../utils/imageProccessor");
 describe('processImage', () => {
     it('should throw an error if the file does not exist', () => __awaiter(void 0, void 0, void 0, function* () {
-        yield expectAsync((0, imageProccessor_1.processImage)('nonexistent', 100, 100)).toBeRejectedWithError('File not found');
+        yield expectAsync((0, imageProccessor_1.processImage)('nonexistent', { width: 100, height: 100 })).toBeRejectedWithError('File not found');
     }));
 });

@@ -9,18 +9,23 @@
     "test": "jasmine",
     "lint": "eslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
-    "prestart": "npm run build"
+    "prestart": "npm run build",
+    "generate-dummy-data": "node scripts/generate-dummy-data.js",
+    "test-api": "node scripts/test-api.js",
+    "populate-db": "node scripts/populate-database.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/sqlite3": "^3.1.11",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "sharp": "^0.33.5"
+    "sharp": "^0.33.5",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

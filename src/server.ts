@@ -2,9 +2,11 @@ import express from 'express';
 import dotenv from 'dotenv';
 import imageRoutes from './routes/imageRoutes';  
 import errorMiddleware from './middlewares/errorMiddleware';
+import { loggingMiddleware } from './middlewares/loggingMiddleware';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import path from 'path';
+import './database/database'; // Initialize database
 
 dotenv.config();
 const app = express();
@@ -14,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
+app.use(loggingMiddleware);
 
 // Serve static files from the images directory
 app.use('/images', express.static(path.join(__dirname, '../images')));

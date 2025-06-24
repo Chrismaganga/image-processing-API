@@ -3,6 +3,7 @@ import { processImage } from '../utils/imageProccessor';
 import path from 'path';
 import fs from 'fs';
 import { SUPPORTED_FORMATS, fullImagesPath } from '../models';
+import { saveImage, getImageByFilename, getAllImages, getApiLogs } from '../database/services';
 
 // Helper function to get image stats
 const getImageStats = (filePath: string) => {
